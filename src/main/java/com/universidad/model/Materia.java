@@ -1,17 +1,16 @@
 package com.universidad.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import java.io.Serializable;
 import java.util.List;
 
-@Getter // Genera un getter para todos los campos de la clase
-@Setter // Genera un setter para todos los campos de la clase
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -38,14 +37,17 @@ public class Materia implements Serializable {
 
     @Column(name = "nombre_materia", nullable = false, length = 100) // Columna no nula con longitud máxima de 100 caracteres
     // El nombre de la materia no puede ser nulo y tiene una longitud máxima de 100 caracteres
+    @NotBlank(message = "El nombre de la materia es obligatorio")
     private String nombreMateria;
 
     @Column(name = "codigo_unico", nullable = false, unique = true) // Columna no nula y con valor único
     // El código único de la materia no puede ser nulo y debe ser único en la base de datos
+    @NotBlank(message = "El código único es obligatorio")
     private String codigoUnico;
 
     @Column(name = "creditos", nullable = false) // Columna no nula
     // El número de créditos de la materia no puede ser nulo
+    @NotNull(message = "Los créditos son obligatorios")
     private Integer creditos;
 
     @Version // Anotación para manejar la versión de la entidad
@@ -98,5 +100,9 @@ public class Materia implements Serializable {
         }
         return false;
     }
+
+    @ManyToOne
+    @JoinColumn(name = "docente_id")
+    private Docente docente;
 
 }

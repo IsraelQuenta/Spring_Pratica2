@@ -4,19 +4,24 @@ import com.universidad.model.Materia;
 import com.universidad.service.IMateriaService;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 import com.universidad.dto.MateriaDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/materias")
+@Tag(name = "Materias", description = "CRUD de materias universitarias")
 public class MateriaController {
 
     private final IMateriaService materiaService;
@@ -26,8 +31,9 @@ public class MateriaController {
     public MateriaController(IMateriaService materiaService) {
         this.materiaService = materiaService;
     }
-
+    @Operation(summary = "Obtener todas las materias", description = "Devuelve una lista de todas las materias registradas")
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCENTE', 'ESTUDIANTE')")
     public ResponseEntity<List<MateriaDTO>> obtenerTodasLasMaterias() {
         long inicio = System.currentTimeMillis();
         logger.info("[MATERIA] Inicio obtenerTodasLasMaterias: {}", inicio);
@@ -37,7 +43,9 @@ public class MateriaController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Obtener materia por ID")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCENTE', 'ESTUDIANTE')")
     public ResponseEntity<MateriaDTO> obtenerMateriaPorId(@PathVariable Long id) {
         long inicio = System.currentTimeMillis();
         logger.info("[MATERIA] Inicio obtenerMateriaPorId: {}", inicio);
@@ -59,15 +67,18 @@ public class MateriaController {
         return ResponseEntity.ok(materia);
     }
 
+    @Operation(summary = "Crear una nueva materia")
     @PostMapping
-    public ResponseEntity<MateriaDTO> crearMateria(@RequestBody MateriaDTO materia) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCENTE')")
+    public ResponseEntity<MateriaDTO> crearMateria(@Valid @RequestBody MateriaDTO materia) {
         //MateriaDTO materiaDTO = new MateriaDTO(materia.getId(), materia.getNombre(), materia.getCodigoUnico());
         MateriaDTO nueva = materiaService.crearMateria(materia);
         return ResponseEntity.status(HttpStatus.CREATED).body(nueva);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MateriaDTO> actualizarMateria(@PathVariable Long id, @RequestBody MateriaDTO materia) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<MateriaDTO> actualizarMateria(@PathVariable Long id, @Valid @RequestBody MateriaDTO materia) {
         //MateriaDTO materiaDTO = new MateriaDTO(materia.getId(), materia.getNombreMateria(), materia.getCodigoUnico());
         MateriaDTO actualizadaDTO = materiaService.actualizarMateria(id, materia);
         //Materia actualizada = new Materia(actualizadaDTO.getId(), actualizadaDTO.getNombre(), actualizadaDTO.getCodigoUnico());
@@ -75,6 +86,7 @@ public class MateriaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminarMateria(@PathVariable Long id) {
         materiaService.eliminarMateria(id);
         return ResponseEntity.noContent().build();
